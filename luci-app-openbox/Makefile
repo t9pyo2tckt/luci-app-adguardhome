@@ -81,9 +81,9 @@ define Package/luci-app-openbox
   SUBMENU:=3. Applications
   TITLE:=Open-Box - sing-box transparent proxy with web panel
   URL:=https://github.com/liandu2024/Open-Box
-  # +libc: 内置的 node/sing-box 是 musl 动态链接的预编译二进制(NEEDED
-  #        libc.musl-$(ARCH).so.1),打包时依赖扫描要求显式声明,否则报
-  #        "missing dependencies for the following libraries"
+  # +libc: 声明运行时依赖(内置 node/sing-box 是 musl 动态链接的预编译
+  #        二进制)。注意它无法单独通过打包期的库依赖检查——见下方
+  #        extra_provides 的说明。
   DEPENDS:=@(TARGET_x86_64||TARGET_aarch64) \
     +libc \
     +luci-base \
@@ -92,6 +92,19 @@ define Package/luci-app-openbox
     +ca-bundle
   # kmod-tun: 内核 tun 入站;kmod-nft-tproxy: tproxy/共享网络;
   # ca-bundle: 面板内自更新 / update.sh 走 https 下载需要根证书
+endef
+
+# 打包期库依赖检查(gen-dependencies.sh)会扫描装入固件的 ELF 的 DT_NEEDED,
+# 要求每个库名出现在本包的 .provides(= 自带 lib*.so* + 各 DEPENDS 包的
+# provides + 下面的 extra_provides)里。
+# node/sing-box 是 Alpine/musl 环境预编译的,NEEDED 记的是 musl 的 SONAME
+# "libc.musl-$(ARCH).so.1";而 OpenWrt 的 libc 包只装 ld-musl-$(ARCH).so.1
+# 和 libc.so*,provides 里没有这个名字——所以只写 +libc 仍会报
+# "missing dependencies for the following libraries: libc.musl-x86_64.so.1"。
+# 运行时并无问题(musl ldso 把自身 SONAME 视为已加载,这也是 install.sh
+# 方式一直能跑的原因),这里只是向检查器声明该 soname 已满足。
+define Package/luci-app-openbox/extra_provides
+	echo "libc.musl-$(ARCH).so.1";
 endef
 
 define Package/luci-app-openbox/description
