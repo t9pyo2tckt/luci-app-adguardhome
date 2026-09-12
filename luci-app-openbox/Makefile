@@ -81,7 +81,11 @@ define Package/luci-app-openbox
   SUBMENU:=3. Applications
   TITLE:=Open-Box - sing-box transparent proxy with web panel
   URL:=https://github.com/liandu2024/Open-Box
+  # +libc: 内置的 node/sing-box 是 musl 动态链接的预编译二进制(NEEDED
+  #        libc.musl-$(ARCH).so.1),打包时依赖扫描要求显式声明,否则报
+  #        "missing dependencies for the following libraries"
   DEPENDS:=@(TARGET_x86_64||TARGET_aarch64) \
+    +libc \
     +luci-base \
     +kmod-tun \
     +kmod-nft-tproxy \
