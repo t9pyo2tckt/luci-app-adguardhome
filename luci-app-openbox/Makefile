@@ -49,9 +49,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-openbox
-# 追最新模式下版本号不对应具体上游版本,仅用于构建目录命名;
-# 实际编入的版本以编译日志 / meta.json 为准
-PKG_VERSION:=latest
+# 追最新模式下版本号不对应具体上游版本,取构建日期代替,仅用于构建目录
+# 命名与包版本;实际编入的上游版本以编译日志 / meta.json 为准。
+# 注意:必须是合法 apk 版本号(以数字开头),OpenWrt master 已改用 apk 打包,
+# "latest" 这类纯字符串会被 apk 拒绝:
+#   ERROR: info field 'version' has invalid value: package version is invalid
+PKG_VERSION:=$(shell date +%Y.%m.%d)
 PKG_RELEASE:=1
 
 PKG_LICENSE:=MIT
